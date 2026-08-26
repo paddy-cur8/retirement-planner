@@ -94,6 +94,14 @@
   ul.levers li{padding:12px 14px; border:1px solid var(--border); border-radius:10px; background:var(--surface-1); font-size:0.9rem}
   ul.levers li b{color:var(--text-primary)}
   .caveat{font-size:0.82rem; color:var(--muted)}
+  .health{border-radius:12px; padding:14px 16px; font-size:0.95rem; border:1px solid var(--border); background:var(--surface-1)}
+  .health.ok{background:color-mix(in srgb,var(--good) 13%,var(--card)); border-color:color-mix(in srgb,var(--good) 45%,var(--border))}
+  .health.bad{background:color-mix(in srgb,var(--warn) 13%,var(--card)); border-color:color-mix(in srgb,var(--warn) 45%,var(--border))}
+  .health b{color:var(--text-primary)}
+  .wi-better{color:var(--good); font-variant-numeric:tabular-nums}
+  .wi-worse{color:var(--warn); font-variant-numeric:tabular-nums}
+  td.wi-lever{font-weight:600; color:var(--text-primary); text-align:left}
+  #spouseControls,.sp-ctrl{transition:opacity .15s}
   .disclaim{margin-top:20px; font-size:0.8rem; color:var(--muted); border-top:1px solid var(--border); padding-top:14px}
   @media (max-width:480px){
     .wrap{padding:16px 10px 44px}
@@ -132,8 +140,9 @@
       <div class="ctrl"><label>Your pay-rise steps <b id="lJumps">2</b></label>
         <input id="jumps" type="range" min="1" max="6" step="1" value="2"></div>
     </div>
-    <div class="grouplabel g-inc2" style="margin-top:20px">Spouse / partner &mdash; income trajectory <span style="text-transform:none;letter-spacing:0">(set income to £0 for a single-earner household)</span></div>
-    <div class="controls g-inc2">
+    <div class="grouplabel g-inc2" style="margin-top:20px">Spouse / partner &mdash; income trajectory
+      <label class="wftoggle"><input type="checkbox" id="spouseOn" checked> include a second earner</label></div>
+    <div class="controls g-inc2" id="spouseControls">
       <div class="ctrl"><label>Spouse income today (gross) <b id="lSpouse">£35,000</b></label>
         <input id="spouse" type="range" min="0" max="400000" step="5000" value="35000"></div>
       <div class="ctrl"><label>Spouse peak income <b id="lSpeak">£50,000</b></label>
@@ -149,9 +158,9 @@
         <input id="esac" type="range" min="0" max="40" step="1" value="5"></div>
       <div class="ctrl"><label>Your employer contribution <b id="lEmpr">3%</b></label>
         <input id="empr" type="range" min="0" max="20" step="0.5" value="3"></div>
-      <div class="ctrl"><label>Spouse contributes to pension <b id="lSesac">5%</b></label>
+      <div class="ctrl sp-ctrl"><label>Spouse contributes to pension <b id="lSesac">5%</b></label>
         <input id="sesac" type="range" min="0" max="40" step="1" value="5"></div>
-      <div class="ctrl"><label>Spouse employer contribution <b id="lSemp">3%</b></label>
+      <div class="ctrl sp-ctrl"><label>Spouse employer contribution <b id="lSemp">3%</b></label>
         <input id="semp" type="range" min="0" max="20" step="0.5" value="3"></div>
       <div class="ctrl"><label>Extra sacrifice of each pay rise (both) <b id="lSac">25%</b></label>
         <input id="sac" type="range" min="0" max="100" step="5" value="25"></div>
@@ -167,7 +176,7 @@
         <input id="rr" type="range" min="2" max="7" step="0.25" value="4"></div>
       <div class="ctrl"><label>Your retirement age <b id="lRet">66</b></label>
         <input id="ret" type="range" min="40" max="75" step="1" value="66"></div>
-      <div class="ctrl"><label>Spouse retirement age <b id="lSret">66</b></label>
+      <div class="ctrl sp-ctrl"><label>Spouse retirement age <b id="lSret">66</b></label>
         <input id="sret" type="range" min="40" max="75" step="1" value="66"></div>
       <div class="ctrl"><label>Safe withdrawal rate <b id="lSwr">3.5%</b></label>
         <input id="swr" type="range" min="3" max="4.5" step="0.1" value="3.5"></div>
@@ -203,22 +212,33 @@
   </section>
 
   <section>
-    <h2>Two income paths <span class="hint" id="hInc"></span></h2>
-    <div class="legend"><span><i class="swatch" style="background:var(--income)"></i>You</span><span><i class="swatch" style="background:var(--pension)"></i>Spouse</span><span class="caveat" style="margin:0">each drops to zero at that partner's retirement</span></div>
+    <h2>Income path<span id="hPaths">s</span> <span class="hint" id="hInc"></span></h2>
+    <div class="legend"><span><i class="swatch" style="background:var(--income)"></i>You</span><span id="legSpouse"><i class="swatch" style="background:var(--pension)"></i>Spouse</span><span class="caveat" style="margin:0">drops to zero at retirement</span></div>
     <div class="chartbox"><svg id="incChart" viewBox="0 0 920 300" role="img" aria-label="Projected income to retirement"></svg><div class="tt" id="ttI"></div></div>
     <p class="caveat" style="margin-top:10px" id="incNote"></p>
   </section>
 
   <section>
-    <h2>Where each year's income goes <span class="hint">your gross salary, split four ways (to retirement)</span></h2>
+    <h2>Where your income goes each year <span class="hint">your gross salary, split four ways</span></h2>
     <div class="legend">
-      <span><i class="swatch" style="background:var(--access)"></i>Net saved (ISAs + workplace pension)</span>
+      <span><i class="swatch" style="background:var(--access)"></i>Net saved (ISAs)</span>
       <span><i class="swatch" style="background:var(--pension)"></i>Sacrificed to pension</span>
       <span><i class="swatch" style="background:var(--tax)"></i>Tax &amp; NI</span>
-      <span><i class="swatch" style="background:var(--spent)"></i>Net income kept (spent)</span>
+      <span><i class="swatch" style="background:var(--spent)"></i>Take-home you spend</span>
     </div>
-    <div class="chartbox"><svg id="flowChart" viewBox="0 0 920 340" role="img" aria-label="Annual income allocation to retirement"></svg><div class="tt" id="ttF"></div></div>
-    <p class="caveat" style="margin-top:10px">Each bar is <b>your</b> gross salary that year (spouse excluded). "Sacrificed" is your pension salary sacrifice — your standard rate plus any extra sacrifice of raises (pre-tax); your employer's contribution adds on top and isn't drawn from this bar. "Net saved" is your ISA/taxable saving; "Tax &amp; NI" is what HMRC takes on the post-sacrifice salary; the rest is take-home you spend. Segments sum to gross salary. A <b>hatched</b> sacrifice segment (▨) marks years where your pension input hits the <b>£60k annual allowance</b> — there, sacrificing more can't reduce tax further, so the tax band stops shrinking.</p>
+    <div class="chartbox"><svg id="flowChart" viewBox="0 0 920 340" role="img" aria-label="Your annual income allocation"></svg><div class="tt" id="ttF"></div></div>
+    <p class="caveat" style="margin-top:10px">Each bar is your gross salary that year, split so the four parts sum to it. "Sacrificed" is your pension salary sacrifice (pre-tax); your employer's contribution adds on top and isn't drawn from this bar. A <b>hatched</b> sacrifice segment marks years your pension input hits the <b>£60k annual allowance</b> — beyond it, sacrificing more can't cut tax.</p>
+  </section>
+
+  <section id="spouseFlowSection">
+    <h2>Where your spouse's income goes each year <span class="hint">spouse gross salary, split four ways</span></h2>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--access)"></i>Net saved (ISAs)</span>
+      <span><i class="swatch" style="background:var(--pension)"></i>Sacrificed to pension</span>
+      <span><i class="swatch" style="background:var(--tax)"></i>Tax &amp; NI</span>
+      <span><i class="swatch" style="background:var(--spent)"></i>Take-home spent</span>
+    </div>
+    <div class="chartbox"><svg id="flowChartS" viewBox="0 0 920 340" role="img" aria-label="Spouse annual income allocation"></svg><div class="tt" id="ttFS"></div></div>
   </section>
 
   <section>
@@ -251,24 +271,26 @@
       <thead><tr><th>Scenario</th><th>Pot at retirement</th><th>Net worth at retirement</th><th>Sustainable income</th><th>Net worth at 95</th></tr></thead>
       <tbody id="scenBody"></tbody>
     </table>
-    <p class="caveat" style="margin-top:12px">Income = pot &times; your safe-withdrawal rate. Add the State Pension (~£23,900/yr for two full records, today's money) from age 68 on top.</p>
-  </section>
-
-  <section class="prose">
-    <h2>How to read this, and the ideas behind it</h2>
-    <p><strong>Salary sacrifice turns a taxed raise into an untaxed contribution.</strong> A pound taken as salary in the higher-rate band reaches your investments as roughly 58p; sacrificed into a pension it arrives as a full pound, and you also save employee National Insurance. That's why the pension band grows fast when contributions are high. The model caps pension input at the <strong>£60,000 annual allowance</strong> and routes anything above it to taken-home pay (taxed, then partly invested) &mdash; anyone whose total income approaches ~£260k sees the allowance taper, which isn't modelled here and would pull that ceiling down.</p>
-    <p><strong>The catch is the lock.</strong> Money in a pension is inaccessible until the minimum pension age &mdash; currently 55, rising to 57 in 2028 and likely higher for younger savers. So if you plan to stop work before then, your <strong>accessible</strong> pot (ISAs and taxable investments) has to cover the years until the pension unlocks. The early-retirement bridge tile turns green only when accessible savings actually cover that gap; if it flags a shortfall, the fix is to sacrifice a little less into pensions and let more flow into ISAs.</p>
-    <p><strong>Home equity builds from two forces.</strong> Rather than a flat assumption, equity is modelled as the property value (growing at your chosen real house-price growth) minus a mortgage that amortises to zero over its remaining term. Because mortgage debt is fixed in cash terms, inflation quietly erodes it in real terms too. Equity climbs as the loan is paid down &mdash; though it stays illiquid unless the home is sold or downsized.</p>
+    <p class="caveat" style="margin-top:12px">Income = pot &times; your safe-withdrawal rate. The State Pension (roughly £12k/yr per person with a full record, today's money) is added automatically from age 68 in the drawdown.</p>
   </section>
 
   <section>
-    <h2>The levers that move the needle</h2>
-    <ul class="levers">
-      <li><b>Save a bigger share of pay rises.</b> At a young age, every extra pound invested compounds for decades &mdash; the biggest lever most people have.</li>
-      <li><b>Use pension tax relief, but mind the lock.</b> Salary sacrifice is highly tax-efficient; the "sacrifice" and "pension share" sliders trade that efficiency against early-access flexibility. Keep the bridge tile green.</li>
-      <li><b>Overpay the mortgage vs invest?</b> If your mortgage rate is close to your expected investment return, paying it down is a guaranteed, risk-free return worth weighing against investing.</li>
-      <li><b>Stay invested, low-cost, global.</b> The long-run real return is the biggest swing factor and the one you don't control &mdash; a cheap, diversified, equity-heavy portfolio is the usual answer.</li>
-    </ul>
+    <h2>Plan health <span class="hint">is this actually sustainable, start to finish?</span></h2>
+    <div id="healthBanner" class="health"></div>
+    <div class="tiles" style="margin-top:14px">
+      <div class="tile"><div class="k">Spare cash to live on now</div><div class="v" id="hNow">–</div><div class="s">household take-home left after saving, per month</div></div>
+      <div class="tile"><div class="k">Tightest year before retiring</div><div class="v" id="hMin">–</div><div class="s" id="hMinSub">lowest monthly spare cash while working</div></div>
+      <div class="tile"><div class="k">Retirement income</div><div class="v" id="hRet2">–</div><div class="s" id="hRet2Sub">per month, in today's money</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What if… <span class="hint">each row changes one thing; everything else stays as set</span></h2>
+    <table>
+      <thead><tr><th>Change</th><th>Pot at retirement</th><th>Monthly income</th><th>Money lasts</th></tr></thead>
+      <tbody id="whatifBody"></tbody>
+    </table>
+    <p class="caveat" style="margin-top:12px">All values in today's money. "Money lasts" is the age your savings would run dry (or ✓ if they survive to 95). Green change = better than your current plan.</p>
   </section>
 
   <div class="disclaim">
@@ -281,7 +303,10 @@ const el=id=>document.getElementById(id);
 const gbp0=n=>(n<0?'-£':'£')+Math.abs(Math.round(n)).toLocaleString('en-GB');
 const gbpK=n=>{const a=Math.abs(n),s=n<0?'-':'';return a>=1e6?s+'£'+(a/1e6).toFixed(a<1e7?2:1)+'m':s+'£'+Math.round(a/1000)+'k';};
 let START_AGE=30;   // current age; set from the input each render
-const END_AGE=95,PENSION_AGE=57,ANNUAL_ALLOWANCE=60000,STATE_PENSION_COUPLE=23946;
+const END_AGE=95,PENSION_AGE=57,ANNUAL_ALLOWANCE=60000,STATE_PENSION_COUPLE=23946,STATE_PENSION_SINGLE=11973;
+function spouseActive(){ return el('spouseOn').checked; }
+function statePension(){ return spouseActive()?STATE_PENSION_COUPLE:STATE_PENSION_SINGLE; }
+function hhRetAge(){ return spouseActive()?Math.max(+I.ret.value,+I.sret.value):+I.ret.value; }
 const I={}; ['age','inc0','peak','peakAge','jumps','spouse','speak','speakage','sjumps','esac','empr','sesac','semp','sac','share','isa','pot','pshare','rr','ret','sret','swr','infl','hv','mort','mr','term','hpi'].forEach(k=>I[k]=el(k));
 function inflR(){ return +I.infl.value/100; }
 function nominal(){ return el('segNom').classList.contains('on'); }
@@ -297,7 +322,7 @@ const takeHome=g=>g-incomeTax(g)-ni(g);
 function jumpAges(peakAge,nJumps){const a=[];for(let k=1;k<=nJumps;k++)a.push(START_AGE+Math.round(k*(peakAge-START_AGE)/nJumps));return a;}
 function incomeGen(age,cur,peak,peakAge,nJumps){ if(age<=START_AGE||peak<=cur)return cur; const done=jumpAges(peakAge,nJumps).filter(a=>age>=a).length; return cur+(peak-cur)*(done/nJumps); }
 function incomeP(age){ return incomeGen(age,+I.inc0.value,+I.peak.value,+I.peakAge.value,+I.jumps.value); }
-function incomeS(age){ return incomeGen(age,+I.spouse.value,+I.speak.value,+I.speakage.value,+I.sjumps.value); }
+function incomeS(age){ return spouseActive()?incomeGen(age,+I.spouse.value,+I.speak.value,+I.speakage.value,+I.sjumps.value):0; }
 function incomeAt(age){ return incomeP(age); }   // back-compat for the flows chart (you)
 
 // one person's contributions for a working year; pension scales with salary and is capped at the £60k allowance
@@ -310,7 +335,7 @@ function personContrib(age, curInc, incFn, eP, emp, extraP, invShare, retAge){
   return {working:true, pension:employer+salarySac, accRaise:invShare*netRaise, salarySac, employer, effSalary:eff, capped, gross:G};
 }
 function pPart(age){ return personContrib(age,+I.inc0.value,incomeP,+I.esac.value/100,+I.empr.value/100,+I.sac.value/100,+I.share.value/100,+I.ret.value); }
-function sPart(age){ return personContrib(age,+I.spouse.value,incomeS,+I.sesac.value/100,+I.semp.value/100,+I.sac.value/100,+I.share.value/100,+I.sret.value); }
+function sPart(age){ if(!spouseActive())return {working:false,pension:0,accRaise:0,salarySac:0,employer:0,effSalary:0,capped:false,gross:0}; return personContrib(age,+I.spouse.value,incomeS,+I.sesac.value/100,+I.semp.value/100,+I.sac.value/100,+I.share.value/100,+I.sret.value); }
 function householdContrib(age){
   const p=pPart(age), s=sPart(age), any=p.working||s.working, isaAnnual=+I.isa.value*12;
   return {pension:p.pension+s.pension, accessible:p.accRaise+s.accRaise+(any?isaAnnual:0), anyWorking:any};
@@ -341,7 +366,7 @@ function homeEquityReal(age){
 // Accumulate while EITHER partner is still working; draw down only once BOTH have retired.
 // Bridge years (both retired → 57) can only draw from accessible; pension unlocks at 57; State Pension helps from 68.
 function project(cfn, r){
-  const hhRet=Math.max(+I.ret.value,+I.sret.value), swr=+I.swr.value/100;
+  const hhRet=hhRetAge(), swr=+I.swr.value/100;
   let pen=(+I.pot.value)*(+I.pshare.value/100), acc=(+I.pot.value)*(1-+I.pshare.value/100), out=[], spend=0;
   for(let age=START_AGE; age<=END_AGE; age++){
     const c=cfn(age);
@@ -349,7 +374,7 @@ function project(cfn, r){
       pen=pen*(1+r)+c.pension; acc=acc*(1+r)+c.accessible;
     } else if(age>START_AGE && !c.anyWorking){           // both retired: grow, then withdraw
       pen*=(1+r); acc*=(1+r);
-      let need=Math.max(0, spend-(age>=68?STATE_PENSION_COUPLE:0));
+      let need=Math.max(0, spend-(age>=68?statePension():0));
       const fromAcc=Math.min(acc,need); acc-=fromAcc; need-=fromAcc;      // accessible first
       if(age>=PENSION_AGE && need>0){ const fromPen=Math.min(pen,need); pen-=fromPen; need-=fromPen; } // pension from 57
     }
@@ -362,22 +387,35 @@ function project(cfn, r){
   return out;
 }
 
-// decompose YOUR gross salary for a year: sums exactly to gross (employer contribution is on top, not shown)
-function flowsAt(age){
-  const c=pPart(age), g=incomeP(age);
+// decompose one earner's gross salary for a year: parts sum exactly to gross (employer contribution on top, not shown)
+// household ISA is split across whoever is currently working, by gross-income share
+function flowsFor(who, age){
+  const c = who==='p'?pPart(age):sPart(age);
+  const g = who==='p'?incomeP(age):incomeS(age);
   if(!c.working) return {gross:g, netSaved:0, sacrificed:0, taxNI:0, netSpent:0, capped:false};
+  const gp=pPart(age).working?incomeP(age):0, gs=sPart(age).working?incomeS(age):0, tot=gp+gs;
+  const isaShare = tot>0 ? (+I.isa.value*12)*(g/tot) : 0;
   const taxNI=incomeTax(c.effSalary)+ni(c.effSalary);
   const takeHomeSalary=c.effSalary-taxNI;
-  const netSaved=c.accRaise+ +I.isa.value*12;           // your invested raises + household ISA
+  const netSaved=c.accRaise+isaShare;
   const netSpent=Math.max(0, takeHomeSalary-netSaved);
   return {gross:g, netSaved, sacrificed:c.salarySac, taxNI, netSpent, capped:c.capped};
 }
+function flowsAt(age){ return flowsFor('p',age); }   // back-compat
+
+// run fn with some inputs temporarily overridden (for what-if analysis), then restore
+function withOverride(ov, fn){ const saved={}; for(const k in ov){saved[k]=I[k].value; I[k].value=ov[k];} try{ return fn(); } finally { for(const k in saved) I[k].value=saved[k]; } }
+// key outcomes of the current input state, in real (today's-money) terms
+function computeKPI(){ const r=+I.rr.value/100, swr=+I.swr.value/100, hhRet=hhRetAge();
+  const s=project(householdContrib,r); const at=s.find(d=>d.age===hhRet)||s.at(-1);
+  let dry=null; for(const d of s){ if(d.age>hhRet && d.liquid<1000){dry=d.age;break;} }
+  return {pot:at.liquid, income:at.liquid*swr, dry, end:s.at(-1).liquid}; }
 
 let series=[], flatSeries=[];
 
 function render(){
   START_AGE=+I.age.value;   // everything downstream keys off current age
-  const pRet=+I.ret.value, sRet=+I.sret.value, hhRet=Math.max(pRet,sRet), r=+I.rr.value/100, swr=+I.swr.value/100;
+  const pRet=+I.ret.value, sRet=+I.sret.value, hhRet=hhRetAge(), r=+I.rr.value/100, swr=+I.swr.value/100;
   el('lAge').textContent=I.age.value;
   el('lInc0').textContent=gbp0(+I.inc0.value); el('lPeak').textContent=gbp0(+I.peak.value); el('lPeakAge').textContent=I.peakAge.value; el('lJumps').textContent=I.jumps.value;
   el('lSpouse').textContent=gbp0(+I.spouse.value); el('lSpeak').textContent=gbp0(+I.speak.value); el('lSpeakage').textContent=I.speakage.value; el('lSjumps').textContent=I.sjumps.value;
@@ -426,10 +464,11 @@ function render(){
     else { tile.classList.add('bad'); el('tBridge').textContent=gbpK((need-have)*F)+' short'; el('tBridgeSub').textContent=gbpK(have*F)+' accessible vs '+gbpK(need*F)+' needed — add ISAs'; } }
 
   // income note
-  const pcP=pPart(+I.peakAge.value), pcS=sPart(+I.speakage.value), Fp=fac(+I.peakAge.value), Fs=fac(+I.speakage.value);
+  const pcP=pPart(+I.peakAge.value), Fp=fac(+I.peakAge.value), Fs=fac(+I.speakage.value), spOnN=spouseActive();
+  const sp0=spOnN?+I.spouse.value:0, spk=spOnN?+I.speak.value:0;
   let capAge=null; for(let a=START_AGE;a<=pRet;a++){ if(pPart(a).capped){capAge=a;break;} }
-  el('hInc').textContent='· household '+gbp0(+I.inc0.value+ +I.spouse.value)+' today → '+gbp0((+I.peak.value)*Fp+(+I.speak.value)*Fs)+' at peak';
-  el('incNote').innerHTML='At your peak, your pension inflow is ~<b>'+gbp0(pcP.pension*Fp)+'/yr</b> ('+gbp0(pcP.salarySac*Fp)+' sacrifice + '+gbp0(pcP.employer*Fp)+' employer)'+(pcP.capped?' — at the £60k allowance cap':'')+'; your spouse adds ~'+gbp0(pcS.pension*Fs)+'/yr at their peak; plus '+gbp0(+I.isa.value*12*Fp)+' household ISA.'+(capAge!==null?' <b style="color:var(--warn)">Your pension hits the £60k allowance from age '+capAge+'</b> — beyond that, more sacrifice can\'t cut your tax.':'');
+  el('hInc').textContent='· '+(spOnN?'household ':'')+gbp0(+I.inc0.value+sp0)+' today → '+gbp0((+I.peak.value)*Fp+spk*Fs)+' at peak';
+  el('incNote').innerHTML='At your peak, your pension inflow is ~<b>'+gbp0(pcP.pension*Fp)+'/yr</b> ('+gbp0(pcP.salarySac*Fp)+' sacrifice + '+gbp0(pcP.employer*Fp)+' employer)'+(pcP.capped?' — at the £60k allowance cap':'')+(spOnN?'; your spouse adds ~'+gbp0(sPart(+I.speakage.value).pension*Fs)+'/yr at their peak':'')+'; plus '+gbp0(+I.isa.value*12*Fp)+' ISA/taxable.'+(capAge!==null?' <b style="color:var(--warn)">Your pension hits the £60k allowance from age '+capAge+'</b> — beyond that, more sacrifice can\'t cut your tax.':'');
 
   // scenarios
   const tb=el('scenBody'); tb.innerHTML='';
@@ -441,16 +480,64 @@ function render(){
     tb.appendChild(tr);
   });
 
-  drawIncome(); drawFlows(); drawChart();
+  // spouse toggle UI
+  const spOn=spouseActive();
+  el('spouseControls').style.opacity=spOn?'1':'0.4';
+  document.querySelectorAll('.sp-ctrl').forEach(e=>e.style.opacity=spOn?'1':'0.4');
+  el('legSpouse').style.display=spOn?'':'none';
+  el('hPaths').style.display=spOn?'':'none';
+  el('spouseFlowSection').style.display=spOn?'':'none';
+
+  // plan health — is there positive spending money every working year, and does the pot last?
+  const isaAnnual=+I.isa.value*12; let minDisc=Infinity, nowDisc=0, minAge=START_AGE;
+  for(let age=START_AGE; age<=hhRet; age++){
+    const cp=pPart(age), cs=sPart(age); if(!cp.working && !cs.working) continue;
+    const thp=cp.working?cp.effSalary-incomeTax(cp.effSalary)-ni(cp.effSalary):0;
+    const ths=cs.working?cs.effSalary-incomeTax(cs.effSalary)-ni(cs.effSalary):0;
+    const saved=(cp.working?cp.accRaise:0)+(cs.working?cs.accRaise:0)+isaAnnual;
+    const disc=thp+ths-saved;
+    if(age===START_AGE)nowDisc=disc;
+    if(disc<minDisc){minDisc=disc; minAge=age;}
+  }
+  const base=computeKPI(), healthy=(minDisc>=0 && base.dry===null);
+  el('hNow').textContent=gbp0(nowDisc/12);
+  el('hMin').textContent=gbp0(minDisc/12); el('hMinSub').textContent='lowest monthly spare cash while working (age '+minAge+')';
+  el('hRet2').textContent=gbp0(base.income/12); el('hRet2Sub').textContent='per month from age '+hhRet+', before State Pension';
+  const hb=el('healthBanner'); hb.classList.remove('ok','bad');
+  if(healthy){ hb.classList.add('ok'); hb.innerHTML='<b>✓ This plan holds up.</b> Every working year leaves positive money to live on (lowest about '+gbp0(minDisc/12)+'/mo, age '+minAge+'), and your savings comfortably last to 95 — around '+gbpK(base.end)+' is still there. There is room to spend a bit more, save less, or retire earlier.'; }
+  else { hb.classList.add('bad'); let m='<b>⚠ This plan needs a tweak.</b> ';
+    if(minDisc<0) m+='Around age '+minAge+' your saving and pension contributions exceed your take-home, so there is nothing left to live on — ease off the ISA or sacrifice sliders. ';
+    if(base.dry!==null) m+='Your savings run dry at age '+base.dry+' — retire later, save more, or lower the withdrawal rate to make it last to 95.';
+    hb.innerHTML=m; }
+
+  // what-if table (all in today's money)
+  const wb=el('whatifBody'); wb.innerHTML='';
+  const lastTxt=k=>k.dry===null?'✓ to 95':'age '+k.dry;
+  const row=(label,k,isBase)=>{
+    const potD=k.pot-base.pot, incD=k.income-base.income;
+    const dP=isBase?'':' <span class="'+(potD>=0?'wi-better':'wi-worse')+'">('+(potD>=0?'+':'−')+gbpK(Math.abs(potD))+')</span>';
+    const dI=isBase?'':' <span class="'+(incD>=0?'wi-better':'wi-worse')+'">('+(incD>=0?'+':'−')+gbp0(Math.abs(incD)/12)+')</span>';
+    const tr=document.createElement('tr'); if(isBase)tr.className='base';
+    tr.innerHTML='<td class="wi-lever">'+label+'</td><td>'+gbpK(k.pot)+dP+'</td><td>'+gbp0(k.income/12)+dI+'</td><td>'+lastTxt(k)+'</td>';
+    wb.appendChild(tr);
+  };
+  row('Your current plan', base, true);
+  const wi=(label,ov)=>row(label, withOverride(ov, computeKPI), false);
+  wi('Retire 5 years later', spOn?{ret:Math.min(75,pRet+5),sret:Math.min(75,sRet+5)}:{ret:Math.min(75,pRet+5)});
+  wi('Retire 5 years earlier', spOn?{ret:Math.max(40,pRet-5),sret:Math.max(40,sRet-5)}:{ret:Math.max(40,pRet-5)});
+  wi('Save £300/mo more into ISAs', {isa:+I.isa.value+300});
+  wi('Sacrifice +15% of each pay rise', {sac:Math.min(100,+I.sac.value+15)});
+  wi('Investment returns 1% lower', {rr:Math.max(0,+I.rr.value-1)});
+
+  drawIncome(); drawFlows('flowChart','ttF','p',pRet); if(spOn) drawFlows('flowChartS','ttFS','s',sRet); drawChart();
 }
 
-function drawFlows(){
-  const retAge=+I.ret.value;
-  const svg=el('flowChart'); const W=Math.max(300,Math.round(svg.getBoundingClientRect().width||920)), H=Math.max(260,Math.round(W*0.38));
+function drawFlows(svgId, ttId, who, retAge){
+  const svg=el(svgId); const W=Math.max(300,Math.round(svg.getBoundingClientRect().width||920)), H=Math.max(260,Math.round(W*0.38));
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   const small=W<440, padL=small?46:58,padR=small?12:18,padT=16,padB=30,iw=W-padL-padR,ih=H-padT-padB;
   const ages=[]; for(let a=START_AGE;a<=retAge;a++)ages.push(a);
-  const flows=ages.map(a=>{const f=flowsAt(a),F=fac(a);return {gross:f.gross*F,netSaved:f.netSaved*F,sacrificed:f.sacrificed*F,taxNI:f.taxNI*F,netSpent:f.netSpent*F,capped:f.capped};});
+  const flows=ages.map(a=>{const f=flowsFor(who,a),F=fac(a);return {gross:f.gross*F,netSaved:f.netSaved*F,sacrificed:f.sacrificed*F,taxNI:f.taxNI*F,netSpent:f.netSpent*F,capped:f.capped};});
   const maxY=Math.max(...flows.map(f=>f.gross))*1.1;
   const x0=age=>padL+(age-START_AGE)/(Math.max(1,retAge-START_AGE))*iw;
   const y=v=>padT+ih-v/maxY*ih;
@@ -477,10 +564,10 @@ function drawFlows(){
   });
   const rx=x0(retAge); g+=`<rect x="${padL}" y="${padT}" width="${iw}" height="${ih}" fill="transparent"/>`;
   svg.innerHTML=g;
-  const tt=el('ttF');
+  const tt=el(ttId);
   svg.onmousemove=e=>{const rect=svg.getBoundingClientRect();const px=(e.clientX-rect.left)/(rect.width/W);
     let age=Math.round(START_AGE+(px-padL)/iw*(retAge-START_AGE));age=Math.max(START_AGE,Math.min(retAge,age));
-    const f=flowsAt(age),F=fac(age);
+    const f=flowsFor(who,age),F=fac(age);
     tt.innerHTML=`<div class="ttage">Age ${age} · ${gbp0(f.gross*F)}</div><div class="row"><span class="lab">Net saved</span><span>${gbp0(f.netSaved*F)}</span></div><div class="row"><span class="lab">Sacrificed${f.capped?' ▨':''}</span><span>${gbp0(f.sacrificed*F)}</span></div><div class="row"><span class="lab">Tax &amp; NI</span><span>${gbp0(f.taxNI*F)}</span></div><div class="row"><span class="lab">Spent</span><span>${gbp0(f.netSpent*F)}</span></div>${f.capped?'<div class="row" style="color:var(--warn)">at £60k allowance cap</div>':''}`;
     const left=x0(age)*(rect.width/W);tt.style.opacity=1;tt.style.left=Math.min(rect.width-175,Math.max(0,left+12))+'px';tt.style.top='20px';};
   svg.onmouseleave=()=>tt.style.opacity=0; svg.ontouchstart=svg.ontouchmove=ev=>{if(ev.touches[0])svg.onmousemove({clientX:ev.touches[0].clientX});};
@@ -521,7 +608,7 @@ function drawIncome(){
 }
 
 function drawChart(){
-  const retAge=Math.max(+I.ret.value,+I.sret.value);
+  const retAge=hhRetAge();
   const svg=el('chart'); const W=Math.max(300,Math.round(svg.getBoundingClientRect().width||920)), H=Math.max(300,Math.round(W*0.42));
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   const small=W<440, padL=small?46:58,padR=small?12:18,padT=18,padB=34,iw=W-padL-padR,ih=H-padT-padB;
@@ -554,7 +641,7 @@ function drawChart(){
   g+=`<text x="${rx}" y="${padT-2}" text-anchor="${retAge>62?'end':'middle'}" class="tick" style="fill:var(--text-primary);font-weight:650">Retire ${retAge} · ${gbpK((rd.liquid+rd.home)*Fr)}</text>`;
   g+=`<rect x="${padL}" y="${padT}" width="${iw}" height="${ih}" fill="transparent"/>`;
   svg.innerHTML=g;
-  hover(svg,el('tt'),W,padL,iw,x,age=>{const s=series.find(v=>v.age===age),F=fac(age);return `<div class="ttage">Age ${age}${s.drawdown>0?' · retired':''}</div><div class="row"><span class="lab">Accessible</span><span>${gbp0(s.accessible*F)}</span></div><div class="row"><span class="lab">Pension</span><span>${gbp0(s.pension*F)}</span></div><div class="row"><span class="lab">Home equity</span><span>${gbp0(s.home*F)}</span></div><div class="row tot"><span>Net worth</span><span>${gbp0((s.liquid+s.home)*F)}</span></div>`+(s.drawdown>0?`<div class="row"><span class="lab">Drawing/yr</span><span>${gbp0((s.drawdown - (age>=68?STATE_PENSION_COUPLE:0))*F)}</span></div>`:'');});
+  hover(svg,el('tt'),W,padL,iw,x,age=>{const s=series.find(v=>v.age===age),F=fac(age);return `<div class="ttage">Age ${age}${s.drawdown>0?' · retired':''}</div><div class="row"><span class="lab">Accessible</span><span>${gbp0(s.accessible*F)}</span></div><div class="row"><span class="lab">Pension</span><span>${gbp0(s.pension*F)}</span></div><div class="row"><span class="lab">Home equity</span><span>${gbp0(s.home*F)}</span></div><div class="row tot"><span>Net worth</span><span>${gbp0((s.liquid+s.home)*F)}</span></div>`+(s.drawdown>0?`<div class="row"><span class="lab">Drawing/yr</span><span>${gbp0((s.drawdown - (age>=68?statePension():0))*F)}</span></div>`:'');});
 }
 
 function hover(svg,tt,W,padL,iw,x,html){
@@ -567,9 +654,10 @@ function hover(svg,tt,W,padL,iw,x,html){
 
 Object.values(I).forEach(i=>i.addEventListener('input',render));
 Object.values(WF).forEach(i=>i.addEventListener(i.type==='checkbox'?'change':'input',render));
+el('spouseOn').addEventListener('change',render);
 el('segReal').addEventListener('click',()=>{el('segReal').classList.add('on');el('segNom').classList.remove('on');render();});
 el('segNom').addEventListener('click',()=>{el('segNom').classList.add('on');el('segReal').classList.remove('on');render();});
-window.addEventListener('resize',()=>{drawIncome();drawFlows();drawChart();});
+window.addEventListener('resize',()=>{drawIncome();drawFlows('flowChart','ttF','p',+I.ret.value);if(spouseActive())drawFlows('flowChartS','ttFS','s',+I.sret.value);drawChart();});
 render();
 </script>
 </body>
